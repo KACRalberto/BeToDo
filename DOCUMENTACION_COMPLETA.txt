@@ -1,0 +1,870 @@
+================================================================================
+                          DOCUMENTACIÓN COMPLETA - BETODO
+                    Aplicación de Gestión de Tareas - Full Stack
+================================================================================
+
+AUTOR: TFG_BeToDo
+FECHA: 2026
+VERSION: 0.0.0
+
+================================================================================
+1. DESCRIPCIÓN GENERAL DEL PROYECTO
+================================================================================
+
+BeToDo es una aplicación web full-stack para la gestión de tareas personales.
+Permite a los usuarios crear una cuenta, autenticarse y gestionar sus tareas
+diarias con diferentes estados (pendiente, hecho, cancelado).
+
+CARACTERÍSTICAS PRINCIPALES:
+- Registro e inicio de sesión de usuarios
+- Autenticación con JWT (JSON Web Tokens)
+- Sistema completo de CRUD para tareas
+- Gestión de estados de tareas
+- Persistencia de datos en MySQL
+- Interfaz moderna con Vue 3
+
+================================================================================
+2. ARQUITECTURA DEL PROYECTO
+================================================================================
+
+El proyecto sigue una arquitectura cliente-servidor con separación clara entre
+frontend y backend:
+
+ESTRUCTURA GENERAL:
+d:\TFG_BeToDo/
+├── backend/                 (API REST con Flask)
+│   ├── src/
+│   │   ├── app.py          (Configuración principal de Flask)
+│   │   ├── extensions.py   (Extensiones: MySQL y JWT)
+│   │   ├── loggers.py      (Sistema de logging)
+│   │   ├── routes/
+│   │   │   └── CRUD.py     (Rutas de autenticación y tareas)
+│   │   └── database/       (Migraciones y schemas)
+│   └── .env                (Variables de ambiente)
+│
+└── frontend/               (Aplicación Vue 3)
+    ├── src/
+    │   ├── App.vue         (Componente raíz)
+    │   ├── main.js         (Punto de entrada)
+    │   ├── router/
+    │   │   └── index.js    (Configuración de rutas)
+    │   ├── stores/
+    │   │   └── counter.js  (Estado global con Pinia)
+    │   ├── assets/         (Recursos estáticos)
+    │   ├── components/     (Componentes Vue reutilizables)
+    │   ├── views/          (Páginas de la aplicación)
+    │   └── tailwind/       (Configuración de estilos)
+    ├── package.json        (Dependencias)
+    ├── vite.config.js      (Configuración de Vite)
+    └── eslint.config.js    (Configuración de linting)
+
+================================================================================
+3. TECNOLOGÍAS UTILIZADAS
+================================================================================
+
+─── BACKEND ───────────────────────────────────────────────────────────────
+
+Framework Web:
+  • Flask: Framework web ligero para Python
+  • Python 3.x: Lenguaje de programación
+
+Autenticación:
+  • Flask-JWT-Extended: Gestión de tokens JWT
+  • Werkzeug Security: Hashing seguro de contraseñas
+
+Base de Datos:
+  • MySQL: Base de datos relacional
+  • Flask-MySQLdb: Adaptador para conectar Flask con MySQL
+
+Seguridad:
+  • Flask-CORS: Manejo de CORS (Cross-Origin Resource Sharing)
+
+Configuración:
+  • python-dotenv: Gestión de variables de ambiente
+
+─── FRONTEND ──────────────────────────────────────────────────────────────
+
+Framework:
+  • Vue 3: Framework JavaScript reactivo
+  • Node.js: Entorno de ejecución
+
+Herramientas de Construcción:
+  • Vite: Build tool rápido y moderno
+  • NPM: Gestor de paquetes
+
+Gestión de Estado:
+  • Pinia: Store management (alternativa a Vuex)
+
+Enrutamiento:
+  • Vue Router 4: Enrutamiento en la aplicación
+
+Estilos:
+  • Tailwind CSS: Framework de CSS utilitario
+
+Desarrollo:
+  • Oxlint: Linting de código JavaScript
+  • ESLint: Herramienta de linting
+  • Prettier: Formateador de código
+  • Vue DevTools: Plugin de desarrollo para Vue
+
+================================================================================
+4. BASE DE DATOS - MYSQL
+================================================================================
+
+NOMBRE: gestor_tareas
+HOST: 127.0.0.1
+USUARIO: flask_user
+
+TABLAS:
+
+1. usuarios
+   ├── id (INT, PRIMARY KEY, AUTO_INCREMENT)
+   ├── email (VARCHAR, UNIQUE)
+   ├── password (VARCHAR, hashed)
+   └── username (VARCHAR)
+
+2. tareas
+   ├── id (INT, PRIMARY KEY, AUTO_INCREMENT)
+   ├── id_usuario (INT, FOREIGN KEY -> usuarios.id)
+   ├── titulo (VARCHAR, NOT NULL)
+   ├── descripcion (TEXT)
+   ├── estado (VARCHAR, valores: 'pendiente', 'hecho', 'cancelado')
+   └── created_at (TIMESTAMP, default CURRENT_TIMESTAMP)
+
+RELACIONES:
+- Una tarea pertenece a un usuario (many-to-one)
+- Un usuario puede tener muchas tareas
+
+================================================================================
+5. ENDPOINTS DE LA API
+================================================================================
+
+BASE URL: http://localhost:5000
+PREFIJO: /auth
+
+─── AUTENTICACIÓN ──────────────────────────────────────────────────────────
+
+POST /auth/register
+Descripción: Registra un nuevo usuario
+Método: POST
+Requiere: No (sin autenticación)
+
+Body (JSON):
+{
+  "email": "usuario@ejemplo.com",
+  "name": "Nombre del Usuario",
+  "password": "contraseña123",
+  "password_check": "contraseña123"
+}
+
+Validaciones:
+- Email requerido y único
+- Contraseña mínimo 8 caracteres (mayúscula, minúscula, número, símbolo)
+- Las contraseñas deben coincidir
+- Username opcional (default: "Anónimo")
+
+Respuestas:
+✓ 200 OK:
+{
+  "message": "Usuario registrado correctamente",
+  "token": "jwt_token_aqui"
+}
+
+✗ 400 Bad Request: Datos inválidos o contraseña demasiado corta
+✗ 409 Conflict: Email ya registrado
+
+────────────────────────────────────────────────────────────────────────────
+
+POST /auth/login
+Descripción: Inicia sesión de un usuario existente
+Método: POST
+Requiere: No (sin autenticación)
+
+Body (JSON):
+{
+  "email": "usuario@ejemplo.com",
+  "password": "contraseña123"
+}
+
+Validaciones:
+- Email y contraseña requeridos
+- Verifica contraseña con hash
+
+Respuestas:
+✓ 200 OK:
+{
+  "token": "jwt_token_aqui",
+  "user": "nombre_usuario"
+}
+
+✗ 400 Bad Request: JSON inválido o campos faltantes
+✗ 401 Unauthorized: Credenciales incorrectas
+
+─── GESTIÓN DE TAREAS ──────────────────────────────────────────────────────
+
+POST /auth/tareas
+Descripción: Crear una nueva tarea
+Método: POST
+Requiere: Autenticación (usuario_id en sesión)
+
+Body (JSON):
+{
+  "titulo": "Título de la tarea",
+  "descripcion": "Descripción opcional",
+  "estado": "pendiente"
+}
+
+Validaciones:
+- Título requerido (no puede estar vacío)
+- Descripción opcional
+- Estado: 'pendiente', 'hecho', 'cancelado' (default: 'pendiente')
+- Usuario debe estar autenticado
+
+Respuestas:
+✓ 201 Created:
+{
+  "status": "ok"
+}
+
+✗ 400 Bad Request: Título faltante o JSON inválido
+✗ 401 Unauthorized: Usuario no autenticado
+✗ 500 Internal Server Error: Error en la base de datos
+
+────────────────────────────────────────────────────────────────────────────
+
+GET /auth/tareas
+Descripción: Obtiene todas las tareas del usuario autenticado
+Método: GET
+Requiere: Autenticación (token JWT o sesión)
+
+Parámetros Query: Ninguno
+
+Validaciones:
+- Usuario debe estar autenticado
+- Retorna máximo 50 tareas más recientes
+
+Respuestas:
+✓ 200 OK:
+{
+  "ok": true,
+  "tareas": [
+    {
+      "id": 1,
+      "titulo": "Mi primera tarea",
+      "descripcion": "Descripción aquí",
+      "estado": "pendiente"
+    },
+    ...
+  ]
+}
+
+✗ 401 Unauthorized: Usuario no autenticado
+✗ 500 Internal Server Error: Error en la base de datos
+
+────────────────────────────────────────────────────────────────────────────
+
+POST /auth/logout
+Descripción: Finaliza la sesión actual (borrado de cookies)
+Método: GET
+Requiere: Autenticación (cualquiera)
+
+Cuerpo: ninguno
+
+Respuestas:
+✓ 200 OK:
+{
+  "exito": "Sesión finalizada"
+}
+
+────────────────────────────────────────────────────────────────────────────
+
+POST /auth/request-password-reset
+Descripción: Genera un token de recuperación y lo guarda en BD
+Método: POST
+Requiere: No (cualquiera puede solicitarlo)
+
+Body (JSON):
+{
+  "email": "usuario@ejemplo.com"
+}
+
+Validaciones:
+- Email válido
+
+Respuestas:
+✓ 200 OK: Se devuelve el token (para que el frontend lo use en el email) o mensaje genérico
+
+✗ 400 Bad Request: Email faltante o inválido
+✗ 500 Internal Server Error: Error interno
+
+────────────────────────────────────────────────────────────────────────────
+
+POST /auth/reset-password
+Descripción: Cambia la contraseña usando un token válido
+Método: POST
+Requiere: No
+
+Body (JSON):
+{
+  "token": "token_recuperacion",
+  "password": "nueva_contraseña"
+}
+
+Validaciones:
+- Token válido y no caducado
+- Contraseña mínimo 8 caracteres (mayúscula, minúscula, número, símbolo)
+
+Respuestas:
+✓ 200 OK: Contraseña actualizada
+✗ 400 Bad Request: Token inválido/expirado o datos faltantes
+✗ 500 Internal Server Error: Error interno
+
+================================================================================
+6. CONFIGURACIÓN DEL BACKEND
+================================================================================
+
+ARCHIVO: backend/src/.env
+
+VARIABLES REQUERIDAS:
+- MYSQL_USER: Usuario de la base de datos MySQL
+- MYSQL_PASSWORD: Contraseña de MySQL
+- MYSQL_HOST: Host del servidor MySQL (default: 127.0.0.1)
+- MYSQL_DB: Nombre de la base de datos
+- JWT_SECRET_KEY: Clave secreta para generar JWT
+
+CORS CONFIGURADO:
+- Origen permitido: http://localhost:5173 (puerto por defecto de Vite)
+
+LOGGING:
+- Debug Logger: Muestra logs en consola (nivel DEBUG)
+- File Logger: Escribe logs en archivo "MyLog.log" (nivel WARNING)
+
+================================================================================
+7. COMPONENTES DEL BACKEND
+================================================================================
+
+app.py
+──────
+- Inicializa la aplicación Flask
+- Configura conexión a MySQL
+- Configura JWT
+- Implementa CORS
+- Registra los blueprints de rutas
+- Inicializa loggers
+
+Puntos de entrada:
+  - __main__: Ejecuta el servidor en modo debug
+
+extensions.py
+──────────────
+- Define instancias de extensiones Flask
+- MySQL: Conexión a base de datos
+- JWT: Gestor de tokens JWT
+- crear_token(): Función para crear JWT
+
+loggers.py
+───────────
+Clase: LevelFilter
+- Filtro personalizado de logging
+- Filtra logs por nivel exacto
+
+Clase: my_logger
+- Constructor que configura loggers
+- Soporta salida a consola y/o archivo
+- Formatea mensajes con timestamp, nombre, nivel y mensaje
+
+CRUD.py
+────────
+Blueprint: AUTH
+
+Funciones:
+1. register(): Registra nuevo usuario
+2. login(): Inicia sesión
+3. postTareas(): Crea nueva tarea (POST)
+4. getTareas(): Obtiene tareas del usuario (GET)
+
+Características de seguridad:
+- Hashing de contraseñas con werkzeug.security (salt automático)
+- Validación y creación de JWT para proteger rutas
+- Sesiones de usuario con cookies HTTPOnly/SameSite
+- Verificación de autenticación en cada endpoint con `@jwt_required`
+- Sanitización de entradas en servidor usando `bleach` y regex
+- Preparación de consultas parametrizadas (%s) para impedir inyección SQL
+- Cabeceras de seguridad (`X-Frame-Options`, `X-Content-Type-Options`, CSP, Referrer-Policy) añadidas en `app.after_request`
+- Cookies `Secure` en entorno de producción
+- Endpoints de recuperación y reinicio de contraseña con tokens de un solo uso
+
+================================================================================
+8. INSTALACIÓN Y CONFIGURACIÓN
+================================================================================
+
+─── REQUISITOS PREVIOS ─────────────────────────────────────────────────────
+
+1. Python 3.8 o superior
+2. Node.js 20.19.0 o superior (también funciona con >=22.12.0)
+3. MySQL Server instalado y ejecutándose
+4. pip (gestor de paquetes de Python)
+5. npm (gestor de paquetes de Node.js)
+
+─── CONFIGURACIÓN DEL BACKEND ──────────────────────────────────────────────
+
+1. Navegar al directorio backend:
+   cd d:\TFG_BeToDo\backend
+
+2. Crear entorno virtual (recomendado):
+   python -m venv venv
+   # En Windows:
+   venv\Scripts\activate
+
+3. Instalar dependencias:
+   pip install flask flask-mysqldb flask-cors flask-jwt-extended python-dotenv
+
+4. Configurar archivo .env:
+   - Copiar el archivo .env.example (si existe) o crear .env
+   - Configurar credenciales de MySQL
+   - Establecer JWT_SECRET_KEY (cadena aleatoria de 64 caracteres)
+
+5. Crear base de datos MySQL:
+   - Crear base de datos llamada 'gestor_tareas'
+   - Ejecutar scripts de migración (si existen en database/)
+
+6. Ejecutar el servidor:
+   python src/app.py
+   - El servidor estará disponible en: http://localhost:5000
+
+─── CONFIGURACIÓN DEL FRONTEND ─────────────────────────────────────────────
+
+1. Navegar al directorio frontend:
+   cd d:\TFG_BeToDo\frontend
+
+2. Instalar dependencias:
+   npm install
+
+3. Configurar variables de entorno (si necesario):
+   - Crear archivo .env.local si es necesario
+   - Especificar la URL del backend (default: http://localhost:5000)
+
+4. Ejecutar servidor de desarrollo:
+   npm run dev
+   - La aplicación estará disponible en: http://localhost:5173
+
+5. Compilar para producción:
+   npm run build
+   - Genera carpeta dist/ con los archivos optimizados
+
+─── CONEXIÓN ENTRE FRONTEND Y BACKEND ──────────────────────────────────────
+
+El frontend hace peticiones HTTP al backend usando fetch o axios.
+
+CORS está configurado para permitir requests desde http://localhost:5173
+
+Flujo típico:
+1. Usuario completa formulario en frontend
+2. Frontend envía POST/GET request al backend
+3. Backend valida, procesa y responde con JSON
+4. Frontend maneja respuesta y actualiza componentes
+
+================================================================================
+9. FLUJO DE AUTENTICACIÓN
+================================================================================
+
+REGISTRO (REGISTER):
+1. Usuario ingresa email, nombre, contraseña
+2. Frontend valida email y contraseñas
+3. Frontend envía POST a /auth/register
+4. Backend valida y verifica email único
+5. Backend hashea contraseña con werkzeug
+6. Backend inserta usuario en BD MySQL
+7. Backend crea JWT token
+8. Backend responde con token
+9. Frontend guarda token (localStorage/sessionStorage)
+10. Frontend redirige a página principal
+
+LOGIN (LOGIN):
+1. Usuario ingresa email y contraseña
+2. Frontend envía POST a /auth/login
+3. Backend busca usuario por email
+4. Backend verifica contraseña con check_password_hash
+5. Backend genera JWT token
+6. Backend responde con token y nombre de usuario
+7. Frontend guarda token y actualiza estado global
+8. Frontend redirige a dashboard
+
+ACCESO A RECURSOS PROTEGIDOS:
+1. Antes de acceder a /tareas, frontend envía GET request
+2. Frontend incluye token en header Authorization
+3. Backend verifica token con JWT
+4. Si válido, procesa la solicitud
+5. Si inválido, retorna 401 Unauthorized
+
+================================================================================
+10. GESTIÓN DE ESTADO (FRONTEND)
+================================================================================
+
+Pinia Store (stores/counter.js):
+- Gestiona estado global de la aplicación
+- Almacena información del usuario autenticado
+- Persiste token de autenticación
+- Maneja estado de carga y errores
+
+Estado típico:
+{
+  user: {
+    id: number,
+    email: string,
+    username: string,
+    token: string
+  },
+  isLoading: boolean,
+  error: string | null,
+  tareas: []
+}
+
+================================================================================
+11. ESTRUCTURA DE CARPETAS DETALLADA
+================================================================================
+
+BACKEND:
+────────
+backend/
+├── src/
+│   ├── app.py              # Aplicación principal Flask
+│   ├── extensions.py       # Extensiones (MySQL, JWT)
+│   ├── loggers.py          # Sistema de logging personalizado
+│   ├── __pycache__/        # Cache de Python compilado
+│   ├── routes/
+│   │   ├── CRUD.py         # Rutas de API
+│   │   └── __pycache__/
+│   └── database/           # Scripts y migraciones de BD (vacío)
+└── .env                    # Variables de entorno
+
+FRONTEND:
+─────────
+frontend/
+├── src/
+│   ├── main.js             # Punto de entrada
+│   ├── App.vue             # Componente raíz
+│   ├── assets/             # Imágenes, fonts, etc.
+│   ├── components/         # Componentes reutilizables (vacío)
+│   ├── views/              # Páginas principales (vacío)
+│   ├── router/
+│   │   └── index.js        # Configuración de rutas (sin rutas definidas)
+│   ├── stores/
+│   │   └── counter.js      # Store de Pinia
+│   └── tailwind/           # Configuración de Tailwind CSS
+├── index.html              # HTML principal
+├── package.json            # Dependencias de npm
+├── vite.config.js          # Configuración de Vite
+├── eslint.config.js        # Configuración de linting
+├── jsconfig.json           # Configuración de JavaScript
+└── public/                 # Archivos públicos estáticos
+
+================================================================================
+12. COMANDOS ÚTILES
+================================================================================
+
+BACKEND:
+────────
+Iniciar servidor:
+  cd backend && python src/app.py
+
+Instalar paquetes:
+  pip install -r requirements.txt
+
+Crear requirements.txt:
+  pip freeze > requirements.txt
+
+FRONTEND:
+─────────
+Instalar dependencias:
+  npm install
+
+Iniciar servidor desarrollo:
+  npm run dev
+
+Compilar para producción:
+  npm run build
+
+Previsualizar compilación:
+  npm run preview
+
+Lint con ESLint:
+  npm run lint:eslint
+
+Lint con Oxlint:
+  npm run lint:oxlint
+
+Formatear código:
+  npm run format
+
+Lint completo (ESLint + Oxlint):
+  npm run lint
+
+================================================================================
+13. VARIABLES DE ENTORNO
+================================================================================
+
+BACKEND (.env):
+───────────────
+MYSQL_USER=flask_user
+  Descripción: Usuario de base de datos MySQL
+  Tipo: String
+  Requerido: Sí
+
+MYSQL_PASSWORD=tu_password
+  Descripción: Contraseña del usuario MySQL
+  Tipo: String
+  Requerido: Sí
+  SEGURIDAD: Cambiar en producción
+
+MYSQL_HOST=127.0.0.1
+  Descripción: Host del servidor MySQL
+  Tipo: String (IP o hostname)
+  Requerido: Sí
+  Default: localhost/127.0.0.1
+
+MYSQL_DB=gestor_tareas
+  Descripción: Nombre de la base de datos
+  Tipo: String
+  Requerido: Sí
+
+JWT_SECRET_KEY=7456be22b23883e41fc985c7b3781402e3e3ad61815c2bae3c27ef0354789656
+  Descripción: Clave secreta para firmar JWT tokens
+  Tipo: String (cadena hexadecimal)
+  Requerido: Sí
+  SEGURIDAD: Usar clave aleatoria y fuerte en producción
+
+FRONTEND (.env.local - opcional):
+──────────────────────────────────
+VITE_API_URL=http://localhost:5000
+  Descripción: URL del servidor backend API
+  Tipo: String (URL)
+  Default: http://localhost:5000
+
+================================================================================
+14. MANEJO DE ERRORES
+================================================================================
+
+ERRORES COMUNES:
+
+1. Error de Conexión MySQL:
+   Mensaje: "Connection refused" o "No connection could be made"
+   Solución: Verificar que MySQL está ejecutándose
+             Verificar credenciales en .env
+             Verificar host correcto (127.0.0.1)
+
+2. Error JWT:
+   Mensaje: "Token has expired" o "Invalid token"
+   Solución: JWT_SECRET_KEY debe ser igual en backend
+             Renovar token haciendo login nuevamente
+
+3. CORS Error:
+   Mensaje: "Access to XMLHttpRequest blocked by CORS policy"
+   Solución: Verificar CORS en backend (app.py)
+             Frontend debe estar en http://localhost:5173
+
+4. Base de datos no existe:
+   Solución: Ejecutar script de creación de base de datos
+             CREATE DATABASE gesture_tareas;
+
+5. Tabla no existe:
+   Solución: Ejecutar scripts de migraciones
+             Crear tablas usuarios y tareas
+
+================================================================================
+15. DESARROLLO Y TESTING
+================================================================================
+
+MODO DESARROLLO:
+
+Backend:
+- Flask en modo debug (auto-reload)
+- Logs de debug en consola
+- Archivo de log: MyLog.log
+
+Frontend:
+- Vite modo desarrollo (HMR - Hot Module Replacement)
+- Vue DevTools disponible
+- Fast refresh de componentes
+
+TESTING MANUAL:
+
+1. Probar Registro:
+   POST http://localhost:5000/auth/register
+   {
+     "email": "test@ejemplo.com",
+     "name": "Test User",
+     "password": "123456",
+     "password_check": "123456"
+   }
+
+2. Probar Login:
+   POST http://localhost:5000/auth/login
+   {
+     "email": "test@ejemplo.com",
+     "password": "123456"
+   }
+
+3. Probar Crear Tarea (requiere autenticación):
+   POST http://localhost:5000/auth/tareas
+   Headers:
+     - Authorization: Bearer <token>
+   {
+     "titulo": "Mi primera tarea",
+     "descripcion": "Descripción",
+     "estado": "pendiente"
+   }
+
+4. Probar Obtener Tareas:
+   GET http://localhost:5000/auth/tareas
+   Headers:
+     - Authorization: Bearer <token>
+
+Herramientas recomendadas:
+- Postman: Para testing de API
+- HTTP Client de VS Code
+- Insomnia: Alternative a Postman
+
+================================================================================
+16. NOTAS DE SEGURIDAD
+================================================================================
+
+IMPLEMENTADAS:
+✓ Hashing de contraseñas con werkzeug.security
+✓ JWT para tokens de autenticación
+✓ CORS configurado restrictivamente
+✓ Validación y sanitización de entrada en servidor (bleach + regex)
+✓ Sanitización ligera en el cliente antes de enviar formularios
+✓ Uso de consultas parametrizadas para evitar SQL injection
+✓ Cabeceras HTTP de seguridad añadidas (CSP, X-Frame-Options, etc.)
+✓ Cookies HTTPOnly, SameSite y Secure (en producción)
+✓ Sesiones de usuario
+
+RECOMENDACIONES PARA PRODUCCIÓN:
+- Cambiar JWT_SECRET_KEY a una clave aleatoria fuerte
+- Implementar rate limiting en endpoints
+- Usar HTTPS en lugar de HTTP
+- Implementar refresh tokens (actualmente no se usa)
+- Agregar validación de CORS más restrictiva
+- Usar variables de entorno seguros (no en .env en repo)
+- Implementar validación de email (confirmar email)
+- Agregar protección contra SQL injection (actualmente se usa parameterización)
+- Implementar logout y revocación de tokens
+- Agregar MFA (autenticación de dos factores)
+- Usar base de datos con SSL/TLS
+
+================================================================================
+17. POSIBLES MEJORAS Y EXTENSIONES
+================================================================================
+
+FRONTEND:
+- Crear componentes para Vista de Tareas
+- Implementar edición y eliminación de tareas
+- Agregar página de login/registro
+- Implementar dashboard con estadísticas
+- Agregar búsqueda y filtrado de tareas
+- Implementar paginación
+- Agregar notificaciones (toast/snackbar)
+- Implementar temas oscuro/claro
+- Agregar offline support (localStorage)
+
+BACKEND:
+- Implementar endpoints para editar y eliminar tareas
+- Agregar paginación en GET /auth/tareas
+- Implementar búsqueda de tareas
+- Agregar filtros por estado y fecha
+- Implementar soft delete (borrado lógico)
+- Agregar recuperación de contraseña por email
+- Implementar OAUTH (Google, GitHub login)
+- Agregar validación de email
+- Implementar refresh tokens
+- Agregar rate limiting
+
+BASE DE DATOS:
+- Agregar índices en campos frecuentes
+- Implementar auditoría (created_at, updated_at)
+- Agregar roles y permisos
+- Implementar compartición de tareas entre usuarios
+- Agregar comentarios/notas en tareas
+- Implementar categorías/etiquetas
+
+DEVOPS:
+- Dockerizar aplicación
+- Configurar CI/CD
+- Implementar testing automático
+- Agregar documentación API (Swagger)
+- Configurar monitoreo y alertas
+- Implementar backup automático
+
+================================================================================
+18. DEPENDENCIAS COMPLETAS
+================================================================================
+
+BACKEND (Python):
+──────────────────
+flask                    Framework web
+flask-mysqldb            Adaptador MySQL para Flask
+flask-cors               Manejo de CORS
+flask-jwt-extended       Gestión de JWT
+python-dotenv            Carga de variables .env
+werkzeug                 Utilidades seguridad (hashing)
+
+Versiones recomendadas:
+flask>=2.0.0
+flask-mysqldb>=1.0.2
+flask-cors>=3.0.10
+flask-jwt-extended>=4.0.0
+python-dotenv>=0.19.0
+
+FRONTEND (Node.js):
+────────────────────
+Dependencias principales:
+- vue@^3.5.22              Framework Vue 3
+- vue-router@^4.6.3        Enrutamiento
+- pinia@^3.0.3             Gestión de estado
+
+DevDependencies:
+- vite@^7.1.11             Build tool
+- @vitejs/plugin-vue@^6.0.1 Plugin Vue para Vite
+- eslint@^9.37.0           Linting
+- prettier@3.6.2           Formateador
+- oxlint@~1.23.0           Linting de oxc
+- tailwind css              (si está en dependencias)
+
+================================================================================
+19. CONTACTO Y SOPORTE
+================================================================================
+
+Proyecto: BeToDo
+Propósito: TFG (Trabajo de Fin de Grado)
+Año: 2026
+
+Para preguntas o problemas:
+- Revisar la documentación
+- Verificar logs (MyLog.log para backend)
+- Usar Vue DevTools para frontend debugging
+- Usar Network tab del browser para revisar requests
+
+================================================================================
+20. CONCLUSIÓN
+================================================================================
+
+BeToDo es una aplicación completa de gestión de tareas que demuestra:
+
+✓ Autenticación y seguridad con JWT
+✓ Integración Front-end/Back-end
+✓ Base de datos relacional
+✓ API REST con Flask
+✓ Interfaz moderna con Vue 3
+✓ Gestión de estado con Pinia
+✓ Build tools modernas (Vite)
+
+El proyecto está estructurado para ser mantenible, escalable y fácil de entender.
+Constituye una base sólida para desarrollo de aplicaciones web full-stack.
+
+================================================================================
+FIN DE LA DOCUMENTACIÓN
+================================================================================
+
+Última actualización: 2026
+Versión: 1.0 - Documentación Completa
