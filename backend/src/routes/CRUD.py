@@ -39,7 +39,7 @@ def enviar_email_recuperacion(email_destino: str, token: str):
     smtp_user = os.getenv("SMTP_USER", "tu_correo@gmail.com")
     smtp_pass = os.getenv("SMTP_PASS", "tu_password_de_aplicacion")
 
-    enlace = f"https://privado-imp6qdw0y-kleberalbertocrs-projects.vercel.app/reset-password?token={token}"
+    enlace = f"https://be-to-do.vercel.app/reset-password?token={token}"
     
     msg = EmailMessage()
     msg['Subject'] = 'Recuperación de Contraseña'

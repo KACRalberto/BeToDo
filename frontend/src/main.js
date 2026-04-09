@@ -10,7 +10,7 @@ import "vue-toastification/dist/index.css"
 // global axios defaults for authentication
 import axios from 'axios'
 axios.defaults.withCredentials = true
-axios.defaults.baseURL = "https://betodobackend.onrender.com"
+axios.defaults.baseURL = "https://betodo.onrender.com"
 axios.interceptors.request.use(config => {
   const token = localStorage.getItem("TOKEN")
   if (token) {

@@ -13,7 +13,7 @@ app = Flask(__name__)
 # ========== CONFIGURACIÓN DE CORS ==========
 CORS(
     app, 
-    origins=["https://privado-imp6qdw0y-kleberalbertocrs-projects.vercel.app"],
+    origins=["https://be-to-do.vercel.app"],
     allow_headers=["Content-Type", "Authorization"],
     expose_headers=["Content-Type"],
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
