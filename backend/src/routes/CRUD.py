@@ -130,24 +130,38 @@ def login():
 @AUTH.route("/tareas", methods=["POST"])
 @jwt_required()
 def postTareas():
-    userId = int(get_jwt_identity())  # Convertir a int
     try:
-        data = request.get_json()
+        # 1. Movido dentro del try por seguridad
+        userId = int(get_jwt_identity())  
+        
+        # 2. Agregamos 'or {}' para evitar que 'data' sea None si el frontend no envía el Content-Type adecuado
+        data = request.get_json() or {}
+        
+        # 3. Validación manual por si envían un JSON vacío
+        if not data: 
+            return jsonify({"error": "No se enviaron datos"}), 400
+
         titulo = sanitize_text(data.get("titulo", "")).strip()
         descripcion = sanitize_text(data.get("descripcion", "")).strip()
         estado = sanitize_text(data.get("estado", "pendiente")).strip().lower()
-        if estado not in ("pendiente","en_marcha","completada"): estado = "pendiente"
+        
+        if estado not in ("pendiente","en_marcha","completada"): 
+            estado = "pendiente"
 
-        if not titulo: return jsonify({"error": "Título requerido"}), 400
+        if not titulo: 
+            return jsonify({"error": "Título requerido"}), 400
 
         with conexion.connection.cursor() as cursor:
             cursor.execute("INSERT INTO tareas (id_usuario, titulo, descripcion, estado) VALUES (%s, %s, %s, %s)", 
                            (userId, titulo, descripcion, estado))
             conexion.connection.commit()
+            
         return jsonify({"status": "ok"}), 201
+        
     except Exception as e:
+        # Ahora sí atrapará TODOS los errores correctamente
         fileLog.error(f"Error en postTareas: {str(e)}")
-        print("Error en postTareas:", e)
+        print("Error real en postTareas:", e) # <-- Esto saldrá en tus logs de Render
         return jsonify({"error": "Error interno"}), 500
 
 @AUTH.route("/tareas", methods=["GET"])
