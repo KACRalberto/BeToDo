@@ -130,7 +130,7 @@ def login():
 @AUTH.route("/tareas", methods=["POST"])
 @jwt_required()
 def postTareas():
-    userId = get_jwt_identity()
+    userId = int(get_jwt_identity())  # Convertir a int
     try:
         data = request.get_json()
         titulo = sanitize_text(data.get("titulo", "")).strip()
@@ -153,7 +153,7 @@ def postTareas():
 @AUTH.route("/tareas", methods=["GET"])
 @jwt_required()
 def getTareas():
-    userId = get_jwt_identity()
+    userId = int(get_jwt_identity())  # Convertir a int
     try:
         with conexion.connection.cursor() as cursor:
             cursor.execute("SELECT id_tarea, titulo, descripcion, estado FROM tareas WHERE id_usuario = %s ORDER BY id_tarea DESC LIMIT 50", (userId,))
@@ -174,7 +174,7 @@ def getTareas():
 @AUTH.route("/tareas/<int:tarea_id>", methods=["PUT"])
 @jwt_required()
 def updateTarea(tarea_id):
-    userId = get_jwt_identity()
+    userId = int(get_jwt_identity())  # Convertir a int
     try:
         data = request.get_json() or {}
         titulo_nuevo = sanitize_text(data["titulo"]) if "titulo" in data else None
@@ -209,7 +209,7 @@ def updateTarea(tarea_id):
 @AUTH.route("/tareas/<int:tarea_id>", methods=["DELETE"])
 @jwt_required()
 def deleteTarea(tarea_id):
-    userId = get_jwt_identity()
+    userId = int(get_jwt_identity())  # Convertir a int
     try:
         with conexion.connection.cursor() as cursor:
             cursor.execute("SELECT id_usuario FROM tareas WHERE id_tarea = %s", (tarea_id,))
@@ -230,7 +230,7 @@ def deleteTarea(tarea_id):
 @AUTH.route("/tareas", methods=["DELETE"])
 @jwt_required()
 def deleteTodasTareas():
-    userId = get_jwt_identity()
+    userId = int(get_jwt_identity())  # Convertir a int
     try:
         with conexion.connection.cursor() as cursor:
             cursor.execute("DELETE FROM tareas WHERE id_usuario = %s", (userId,))
