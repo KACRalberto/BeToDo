@@ -53,7 +53,7 @@ async function handleReset(){
 
   isLoading.value = true
   try{
-    const resp = await axios.post('/auth/reset-password', { 
+    const resp = await axios.post('reset-password', { 
       token: token, 
       password: password.value 
     })

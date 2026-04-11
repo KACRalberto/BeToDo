@@ -27,7 +27,7 @@ async function handleRequest(){
   try {
     const clean = str => str.replace(/<[^>]*>?/gm, '')
     // Solo enviamos la solicitud. El backend se encarga del correo.
-    const resp = await axios.post('/auth/request-password-reset', { 
+    const resp = await axios.post('request-password-reset', { 
       email: clean(email.value) 
     })
     

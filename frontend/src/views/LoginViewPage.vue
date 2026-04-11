@@ -69,7 +69,7 @@ const toast = useToast()
 const do_login = async () => {
   try {
     const clean = str => str.replace(/<[^>]*>?/gm, '')
-    const response = await axios.post("/auth/login", {
+    const response = await axios.post("login", {
       email: clean(email_login.value),
       password: password_login.value
     }) // Se eliminó withCredentials

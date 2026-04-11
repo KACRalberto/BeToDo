@@ -9,8 +9,7 @@ import "vue-toastification/dist/index.css"
 
 // global axios defaults for authentication
 import axios from 'axios'
-axios.defaults.withCredentials = true
-axios.defaults.baseURL = "https://betodo.onrender.com"
+axios.defaults.baseURL = "/auth"  // Usar proxy de Vercel
 axios.interceptors.request.use(config => {
   const token = localStorage.getItem("TOKEN")
   if (token) {

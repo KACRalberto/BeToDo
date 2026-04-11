@@ -200,14 +200,7 @@ const tiempoDescanso = 300
 const intervaloPomodoro = ref(null)
 
 // --- ESTO ES CLAVE PARA JWT ---
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('TOKEN')
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-}
+// JWT se maneja globalmente en main.js con interceptor
 
 watch(tareaPomodoro, (newValue) => {
   if (newValue) {
@@ -265,12 +258,11 @@ const completarTareaPomodoro = async () => {
   try {
     if (!tareaPomodoro.value) return
     const res = await axios.put(
-      `/auth/tareas/${tareaPomodoro.value}`,
+      `tareas/${tareaPomodoro.value}`,
       {
         estado: 'completada',
       },
-      getAuthHeaders(),
-    ) // Usamos Headers en lugar de withCredentials
+    ) // JWT manejado por interceptor global
 
     pausarPomodoro()
     tareaPomodoro.value = ''
@@ -286,11 +278,10 @@ const completarTareaPomodoro = async () => {
 const marcarComoCompletada = async (tarea) => {
   try {
     await axios.put(
-      `/auth/tareas/${tarea.id}`,
+      `tareas/${tarea.id}`,
       {
         estado: 'completada',
       },
-      getAuthHeaders(),
     )
     await getTareas()
   } catch (error) {
@@ -312,13 +303,12 @@ const editarTarea = async (tarea) => {
 
   try {
     await axios.put(
-      `/auth/tareas/${tarea.id}`,
+      `tareas/${tarea.id}`,
       {
         titulo: nuevoTitulo,
         descripcion: nuevaDesc,
         estado: nuevoEstado,
       },
-      getAuthHeaders(),
     )
     await getTareas()
   } catch (error) {
@@ -330,7 +320,7 @@ const editarTarea = async (tarea) => {
 const eliminarTarea = async (tareaId, nombreTarea) => {
   if (!confirm(`¿Estás seguro de querer eliminar la tarea "${nombreTarea}"?`)) return
   try {
-    await axios.delete(`/auth/tareas/${tareaId}`, getAuthHeaders())
+    await axios.delete(`tareas/${tareaId}`)
     await getTareas()
   } catch (error) {
     alert('Error al eliminar la tarea')
@@ -341,7 +331,7 @@ const eliminarTarea = async (tareaId, nombreTarea) => {
 const eliminarTodasLasTareas = async () => {
   if (!confirm(`¿Estás seguro de querer eliminar TODAS las tareas?`)) return
   try {
-    await axios.delete(`/auth/tareas`, getAuthHeaders())
+    await axios.delete(`tareas`)
     await getTareas()
   } catch (error) {
     alert('Error al eliminar las tareas')
@@ -357,7 +347,7 @@ onMounted(() => {
 
 const cerrar = async () => {
   try {
-    await axios.get('/auth/logout', getAuthHeaders())
+    await axios.get('logout')
   } catch (error) {
     console.error(error)
   } finally {
@@ -369,7 +359,7 @@ const cerrar = async () => {
 
 const getTareas = async () => {
   try {
-    const res = await axios.get('/auth/tareas', getAuthHeaders())
+    const res = await axios.get('tareas')
     if (res.data.ok) tareas.value = res.data.tareas
   } catch (error) {
     if (error.response?.status === 401) cerrar()
@@ -380,13 +370,12 @@ const postTareas = async () => {
   try {
     const clean = (str) => str.replace(/<[^>]*>?/gm, '')
     await axios.post(
-      '/auth/tareas',
+      'tareas',
       {
         titulo: clean(tarea.value),
         descripcion: clean(descripcionTarea.value),
         estado: estadoTarea.value,
       },
-      getAuthHeaders(),
     )
 
     tarea.value = ''

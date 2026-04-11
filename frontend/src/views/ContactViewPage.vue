@@ -40,7 +40,7 @@ const form = reactive({ name: '', email: '', message: '' })
 
 async function handleSubmit() {
   try {
-    await axios.post('/auth/contact', {
+    await axios.post('contact', {
       nombre: form.name,
       email: form.email,
       mensaje: form.message
