@@ -35,6 +35,26 @@ app.config["JWT_TOKEN_ACCESS_EXPIRES"] = timedelta(hours=24)
 jwt.init_app(app)
 conexion.init_app(app)
 
+# ========== CREAR TABLAS SI NO EXISTEN ==========
+with app.app_context():
+    try:
+        cursor = conexion.connection.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS tareas (
+                id_tarea INT PRIMARY KEY AUTO_INCREMENT,
+                id_usuario INT NOT NULL,
+                titulo VARCHAR(255) NOT NULL,
+                descripcion TEXT,
+                estado ENUM('pendiente', 'en_marcha', 'completada') DEFAULT 'pendiente',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE
+            )
+        """)
+        conexion.connection.commit()
+        print("✅ Tabla 'tareas' verificada/creada")
+    except Exception as e:
+        print(f"⚠️  Error al verificar tabla tareas: {e}")
+
 app.register_blueprint(AUTH)
 
 @app.errorhandler(404)
