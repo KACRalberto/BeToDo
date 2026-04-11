@@ -345,16 +345,11 @@ onMounted(() => {
   }
 })
 
-const cerrar = async () => {
-  try {
-    await axios.get('logout')
-  } catch (error) {
-    console.error(error)
-  } finally {
-    localStorage.removeItem('TOKEN')
-    localStorage.removeItem('USER_ID')
-    router.push('/login')
-  }
+const cerrar = () => {
+  // Ya no hacemos la petición axios al backend porque no hay ruta /logout
+  localStorage.removeItem('TOKEN')
+  localStorage.removeItem('USER_ID')
+  router.push('/login')
 }
 
 const getTareas = async () => {

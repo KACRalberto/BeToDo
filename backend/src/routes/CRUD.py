@@ -92,6 +92,7 @@ def register():
         return jsonify({'message': 'Usuario registrado', 'token': token, 'user': userName}), 201
     except Exception as e:
         fileLog.error(f"Error en register: {str(e)}")
+        print("🚨 ERROR REAL EN REGISTER:", e)
         return jsonify({'error': 'Error interno'}), 500
 
 @AUTH.route("/login", methods=["POST"])
