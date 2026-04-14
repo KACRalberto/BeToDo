@@ -82,88 +82,93 @@
       </section>
 
       <!-- PANEL DERECHO (FORMULARIOS) -->
-      <aside class="w-full lg:w-[340px] xl:w-[380px] flex flex-col gap-6 flex-none lg:overflow-hidden lg:min-h-0 pb-6 lg:pb-0">
+      <aside class="w-full lg:w-[340px] xl:w-[380px] flex flex-col flex-none lg:overflow-hidden lg:min-h-0 pb-6 lg:pb-0">
         
-        <!-- PANEL: CREAR TAREA -->
-        <form @submit.prevent="postTareas" class="bg-zinc-900 border border-zinc-800 rounded-3xl shadow-lg p-5 relative overflow-hidden flex-shrink-0">
-          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
-          <h3 class="text-lg font-bold text-white mb-3 font-['Poppins',_sans-serif]">Añadir Tarea</h3>
-          
-          <div class="space-y-3">
-            <div>
-              <label class="block text-xs font-medium text-zinc-400 mb-1">Título</label>
-              <input type="text" v-model="tarea" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500/50 text-zinc-100 transition-all placeholder-zinc-600" placeholder="¿Qué necesitas hacer?" required />
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-zinc-400 mb-1">Descripción</label>
-              <input type="text" v-model="descripcionTarea" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500/50 text-zinc-100 transition-all placeholder-zinc-600" placeholder="Detalles opcionales..." />
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-zinc-400 mb-1">Estado</label>
-              <select v-model="estadoTarea" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500/50 text-zinc-100 transition-all appearance-none cursor-pointer">
-                <option value="pendiente">⏳ Pendiente</option>
-                <option value="en_marcha">🏃 En marcha</option>
-                <option value="completada">✅ Completada</option>
-              </select>
-            </div>
-            <button type="submit" class="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 text-white text-sm font-bold py-2 rounded-xl shadow-md shadow-red-500/20 transition-all mt-1">
-              Guardar Tarea
-            </button>
-          </div>
-        </form>
-
-        <!-- PANEL: POMODORO -->
-        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl shadow-lg p-5 relative overflow-hidden flex-shrink-0">
-          <div class="absolute top-0 left-0 w-full h-1" :class="enDescanso ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-gradient-to-r from-red-500 to-orange-500'"></div>
-          <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2 font-['Poppins',_sans-serif]">
-            <span class="text-xl">🍅</span> Pomodoro
-          </h3>
-
-          <div class="space-y-3">
-            <div>
-              <label class="block text-xs font-medium text-zinc-400 mb-1">Enfócate en:</label>
-              <select v-model="tareaPomodoro" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500/50 text-zinc-100 transition-all appearance-none cursor-pointer">
-                <option value="">-- Selecciona una tarea --</option>
-                <option v-for="t in tareas.filter((t) => t.estado !== 'completada')" :key="t.id" :value="t.id">
-                  {{ t.titulo }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Display Temporizador -->
-            <div class="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-4 text-center shadow-inner relative overflow-hidden">
-              <div class="absolute inset-0 bg-red-500/5 blur-2xl rounded-full" v-if="pomodoroActivo && !enDescanso"></div>
-              <div class="text-4xl lg:text-5xl font-black font-mono tracking-wider relative z-10" :class="enDescanso ? 'text-blue-400' : (pomodoroActivo ? 'text-red-500' : 'text-zinc-100')">
-                {{ formatoTiempo(tiempoRestante) }}
+        <!-- CONTENEDOR CON SCROLL INTERNO PARA MÓVILES -->
+        <div class="flex flex-col gap-6 overflow-y-auto lg:overflow-visible lg:flex-1 custom-scrollbar">
+        
+          <!-- PANEL: CREAR TAREA -->
+          <form @submit.prevent="postTareas" class="bg-zinc-900 border border-zinc-800 rounded-3xl shadow-lg p-5 relative overflow-hidden flex-shrink-0">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+            <h3 class="text-lg font-bold text-white mb-3 font-['Poppins',_sans-serif]">Añadir Tarea</h3>
+            
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">Título</label>
+                <input type="text" v-model="tarea" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500/50 text-zinc-100 transition-all placeholder-zinc-600" placeholder="¿Qué necesitas hacer?" required />
               </div>
-              <p class="text-xs font-medium mt-1 uppercase tracking-widest relative z-10" :class="enDescanso ? 'text-blue-500' : 'text-zinc-500'">
-                {{ enDescanso ? '☕ Descanso' : pomodoroActivo ? '⏱️ En progreso' : 'Listo para iniciar' }}
-              </p>
+              <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">Descripción</label>
+                <input type="text" v-model="descripcionTarea" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500/50 text-zinc-100 transition-all placeholder-zinc-600" placeholder="Detalles opcionales..." />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">Estado</label>
+                <select v-model="estadoTarea" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500/50 text-zinc-100 transition-all appearance-none cursor-pointer">
+                  <option value="pendiente">⏳ Pendiente</option>
+                  <option value="en_marcha">🏃 En marcha</option>
+                  <option value="completada">✅ Completada</option>
+                </select>
+              </div>
+              <button type="submit" class="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 text-white text-sm font-bold py-2 rounded-xl shadow-md shadow-red-500/20 transition-all mt-1">
+                Guardar Tarea
+              </button>
             </div>
+          </form>
 
-            <!-- Botones Pomodoro -->
-            <div class="flex flex-col gap-2">
-              <button v-if="!pomodoroActivo && !enDescanso" @click="iniciarPomodoro" :disabled="!tareaPomodoro" class="w-full bg-zinc-100 hover:bg-white text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold py-2 rounded-xl transition-all shadow-sm">
-                ▶ Iniciar Sesión
-              </button>
-              
-              <button v-else-if="pomodoroActivo && !enDescanso" @click="pausarPomodoro" class="w-full bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 text-sm font-bold py-2 rounded-xl transition-all border border-yellow-500/20">
-                ⏸ Pausar
-              </button>
+          <!-- PANEL: POMODORO -->
+          <div class="bg-zinc-900 border border-zinc-800 rounded-3xl shadow-lg p-5 relative overflow-hidden flex-shrink-0">
+            <div class="absolute top-0 left-0 w-full h-1" :class="enDescanso ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-gradient-to-r from-red-500 to-orange-500'"></div>
+            <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2 font-['Poppins',_sans-serif]">
+              <span class="text-xl">🍅</span> Pomodoro
+            </h3>
 
-              <button v-if="pomodoroActivo && !enDescanso" @click="iniciarDescanso" class="w-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-sm font-bold py-2 rounded-xl transition-all border border-blue-500/20">
-                ☕ Tomar Descanso
-              </button>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">Enfócate en:</label>
+                <select v-model="tareaPomodoro" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500/50 text-zinc-100 transition-all appearance-none cursor-pointer">
+                  <option value="">-- Selecciona una tarea --</option>
+                  <option v-for="t in tareas.filter((t) => t.estado !== 'completada')" :key="t.id" :value="t.id">
+                    {{ t.titulo }}
+                  </option>
+                </select>
+              </div>
 
-              <button v-if="enDescanso" @click="terminarDescanso" class="w-full bg-blue-500 hover:bg-blue-400 text-white text-sm font-bold py-2 rounded-xl transition-all shadow-md shadow-blue-500/20">
-                Volver al Trabajo
-              </button>
+              <!-- Display Temporizador -->
+              <div class="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-4 text-center shadow-inner relative overflow-hidden">
+                <div class="absolute inset-0 bg-red-500/5 blur-2xl rounded-full" v-if="pomodoroActivo && !enDescanso"></div>
+                <div class="text-4xl lg:text-5xl font-black font-mono tracking-wider relative z-10" :class="enDescanso ? 'text-blue-400' : (pomodoroActivo ? 'text-red-500' : 'text-zinc-100')">
+                  {{ formatoTiempo(tiempoRestante) }}
+                </div>
+                <p class="text-xs font-medium mt-1 uppercase tracking-widest relative z-10" :class="enDescanso ? 'text-blue-500' : 'text-zinc-500'">
+                  {{ enDescanso ? '☕ Descanso' : pomodoroActivo ? '⏱️ En progreso' : 'Listo para iniciar' }}
+                </p>
+              </div>
 
-              <button v-if="tareaPomodoro && !enDescanso" @click="completarTareaPomodoro" class="w-full bg-green-500/10 hover:bg-green-500/20 text-green-400 text-sm font-bold py-2 rounded-xl transition-all border border-green-500/20">
-                ✓ Marcar como Completada
-              </button>
+              <!-- Botones Pomodoro -->
+              <div class="flex flex-col gap-2">
+                <button v-if="!pomodoroActivo && !enDescanso" @click="iniciarPomodoro" :disabled="!tareaPomodoro" class="w-full bg-zinc-100 hover:bg-white text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold py-2 rounded-xl transition-all shadow-sm">
+                  ▶ Iniciar Sesión
+                </button>
+                
+                <button v-else-if="pomodoroActivo && !enDescanso" @click="pausarPomodoro" class="w-full bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 text-sm font-bold py-2 rounded-xl transition-all border border-yellow-500/20">
+                  ⏸ Pausar
+                </button>
+
+                <button v-if="pomodoroActivo && !enDescanso" @click="iniciarDescanso" class="w-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-sm font-bold py-2 rounded-xl transition-all border border-blue-500/20">
+                  ☕ Tomar Descanso
+                </button>
+
+                <button v-if="enDescanso" @click="terminarDescanso" class="w-full bg-blue-500 hover:bg-blue-400 text-white text-sm font-bold py-2 rounded-xl transition-all shadow-md shadow-blue-500/20">
+                  Volver al Trabajo
+                </button>
+
+                <button v-if="tareaPomodoro && !enDescanso" @click="completarTareaPomodoro" class="w-full bg-green-500/10 hover:bg-green-500/20 text-green-400 text-sm font-bold py-2 rounded-xl transition-all border border-green-500/20">
+                  ✓ Marcar como Completada
+                </button>
+              </div>
             </div>
           </div>
+          
         </div>
       </aside>
     </main>

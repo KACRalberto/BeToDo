@@ -51,11 +51,11 @@ def enviar_email_recuperacion(email_destino: str, token: str):
         # Si no tienes configurado el SMTP, se imprimirá en consola (modo desarrollo)
         print(f"--- SIMULACIÓN DE ENVÍO DE EMAIL ---\nEnlace: {enlace}\n------------------------------------")
         
-        # Descomenta las siguientes líneas cuando tengas un correo configurado:
-        # with smtplib.SMTP(smtp_server, smtp_port) as server:
-        #     server.starttls()
-        #     server.login(smtp_user, smtp_pass)
-        #     server.send_message(msg)
+
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+             server.starttls()
+             server.login(smtp_user, smtp_pass)
+             server.send_message(msg)
     except Exception as e:
         print(f"Error enviando email: {e}")
 
