@@ -31,6 +31,11 @@ def is_strong_password(password: str) -> bool:
     has_symbol = any(not c.isalnum() for c in password)
     return has_upper and has_lower and has_digit and has_symbol
 
+# Login throttling: 10 intentos fallidos antes de bloquear 5 minutos
+LOGIN_ATTEMPTS = {}
+MAX_LOGIN_ATTEMPTS = 10
+LOCKOUT_SECONDS = 5 * 60
+
 def enviar_email_recuperacion(email_destino: str, token: str):
     """Envía el email desde el backend en lugar de usar EmailJS en el frontend."""
     # Configura tus credenciales reales en tu archivo .env
@@ -105,12 +110,28 @@ def login():
 
     if not password: return jsonify({"error": "Contraseña requerida"}), 400
 
+    now = datetime.now()
+    attempt = LOGIN_ATTEMPTS.get(email, {"count": 0, "locked_until": None})
+    locked_until = attempt.get("locked_until")
+
+    if locked_until and now < locked_until:
+        wait_seconds = int((locked_until - now).total_seconds())
+        return jsonify({"error": f"Demasiados intentos. Espera {wait_seconds} segundos."}), 429
+
+    if locked_until and now >= locked_until:
+        attempt = {"count": 0, "locked_until": None}
+
     try:
         with conexion.connection.cursor() as cursor:
             cursor.execute("SELECT * FROM usuarios WHERE email = %s", (email,))
             user = cursor.fetchone()
 
             if not user:
+                attempt["count"] = attempt.get("count", 0) + 1
+                if attempt["count"] >= MAX_LOGIN_ATTEMPTS:
+                    attempt["locked_until"] = now + timedelta(seconds=LOCKOUT_SECONDS)
+                    attempt["count"] = 0
+                LOGIN_ATTEMPTS[email] = attempt
                 return jsonify({"error": "Credenciales incorrectas"}), 401
 
             # Soporte dual: ya sea que la base de datos devuelva Diccionarios o Tuplas (id, email, password, username)
@@ -119,8 +140,14 @@ def login():
             user_name = user["username"] if isinstance(user, dict) else user[3]
 
             if not check_password_hash(user_pass, password):
+                attempt["count"] = attempt.get("count", 0) + 1
+                if attempt["count"] >= MAX_LOGIN_ATTEMPTS:
+                    attempt["locked_until"] = now + timedelta(seconds=LOCKOUT_SECONDS)
+                    attempt["count"] = 0
+                LOGIN_ATTEMPTS[email] = attempt
                 return jsonify({"error": "Credenciales incorrectas"}), 401
 
+            LOGIN_ATTEMPTS.pop(email, None)
             token = crear_token(str(user_id))
 
         return jsonify({"token": token, "user": user_name}), 200

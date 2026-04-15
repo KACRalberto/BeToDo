@@ -82,10 +82,10 @@
       </section>
 
       <!-- PANEL DERECHO (FORMULARIOS) -->
-      <aside class="w-full lg:w-[340px] xl:w-[380px] flex flex-col flex-none lg:overflow-hidden lg:min-h-0 pb-6 lg:pb-0">
+      <aside class="w-full lg:w-[340px] xl:w-[380px] flex flex-col flex-none overflow-hidden min-h-0 pb-6 lg:pb-0">
         
         <!-- CONTENEDOR CON SCROLL INTERNO PARA MÓVILES -->
-        <div class="flex flex-col gap-6 overflow-y-auto lg:overflow-visible lg:flex-1 custom-scrollbar">
+        <div class="flex flex-col gap-6 overflow-y-auto flex-1 min-h-0 max-h-[calc(100vh-6rem)] custom-scrollbar">
         
           <!-- PANEL: CREAR TAREA -->
           <form @submit.prevent="postTareas" class="bg-zinc-900 border border-zinc-800 rounded-3xl shadow-lg p-5 relative overflow-hidden flex-shrink-0">
