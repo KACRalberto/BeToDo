@@ -17,7 +17,7 @@ const router = createRouter({
     {path: "/contact", component: ()=> import("@/views/ContactViewPage.vue"), meta:{isPublic: true}},
     {path : "/home", component: ()=> import("@/views/homeUserViewPage.vue"), meta:{requiresToken : true}},
     // catch-all 404 route (must be last)
-    { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/views/NotFoundView.vue'), meta: { isPublic: true } }
+    { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/views/NotFoundViewPage.vue'), meta: { isPublic: true } }
 
   ],
 })
